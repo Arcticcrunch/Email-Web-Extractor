@@ -58,7 +58,7 @@ namespace Email_Web_Extractor
         Color disabledTextColor = Color.FromKnownColor(KnownColor.ActiveBorder);
         Color disabledBGColor = Color.FromKnownColor(KnownColor.Control);
 
-
+        bool isAPIHandlerInit = false;
         //List<Thread> threadsPool = new List<Thread>();
         //int maxThreds = 1;
         Stopwatch googleRequestStopWatch;
@@ -69,7 +69,7 @@ namespace Email_Web_Extractor
         int currentSearchPages = 10;
         //int currentSearchThreads = 0;
 
-        int currentAvalableThrads = 1;
+        int currentAvalableThreads = 1;
         int currentActiveThreads = 0;
         bool canDoGoogleRequest = true;
 
@@ -77,6 +77,8 @@ namespace Email_Web_Extractor
         public event TaskComplited GoogleRequestTaskComplitedEvent;
         public event EmailSearch GoogleSearchStartedEvent;
         public event EmailSearch GoogleSearchEndedEvent;
+        public event EmailSearch EmailSearchStartedEvent;
+        public event EmailSearch EmailSearchEndedEvent;
 
 
         public bool CanDoGoogleRequest
@@ -137,8 +139,11 @@ namespace Email_Web_Extractor
             findWebSitesButton.BackColor = disabledBGColor;
             findWebSitesButton.ForeColor = disabledTextColor;
 
+
+            this.isAPIHandlerInit = ApiKeysHandler.Init(rootDirectory);
+
             // Обновить состояние кнопок открытия и удаления временного файла
-            if (File.Exists(fullTempFilePath))
+            if (File.Exists(fullTempFilePath) && this.isAPIHandlerInit)
             {
                 deleteWebPagesTempFileButton.Enabled = true;
                 deleteWebPagesTempFileButton.BackColor = redColor;
@@ -168,8 +173,9 @@ namespace Email_Web_Extractor
                 findEmailsButton.ForeColor = disabledTextColor;
                 findEmailsButton.BackColor = disabledBGColor;
             }
+            
 
-
+            
             //ToggleFindWebSitesButton(false);
             //try
             //{
@@ -281,8 +287,8 @@ namespace Email_Web_Extractor
         /// <returns></returns>
         private string RequestGoogleAPI(string searchRequest, int offset)
         {
-            string currentAPIKey = APIkeys[1];
-            string currentCXKey = CXkeys[1];
+            string currentAPIKey = APIkeys[0];
+            string currentCXKey = CXkeys[0];
 
             string fullRequest = "https://www.googleapis.com/customsearch/v1?key=" + currentAPIKey + "&" +
                 "start=" + offset + "&cx=" + currentCXKey + "&q=" + WebUtility.UrlEncode(searchRequest);
@@ -350,16 +356,19 @@ namespace Email_Web_Extractor
                 {
                     Print("Начался запрос в Google...");
                     GoogleSearchStartedEvent?.Invoke(this, null);
-
-                    int maxCount = MAX_GOOGLE_REQUEST_PAGES_COUNT - 1;
-                    for (int i = 0; i < currentAvalableThrads; i++)
+                    
+                    for (int i = 0; i < currentAvalableThreads; i++)
                     {
-                        if (i >= maxCount || i >= currentSearchPages)
+                        if (i >= MAX_GOOGLE_REQUEST_PAGES_COUNT || i >= currentSearchPages)
                             break;
                         searchOffsetsQueue.Enqueue(i * MAX_GOOGLE_REQUEST_PAGES_COUNT);
                     }
-                    while (currentActiveThreads < currentAvalableThrads && currentActiveThreads < MAX_GOOGLE_REQUEST_THREADS)
+                    int threadsToLaunchCount = currentAvalableThreads;
+                    int currentLaunchedThreads = 0;
+
+                    while (currentLaunchedThreads < threadsToLaunchCount && currentLaunchedThreads < MAX_GOOGLE_REQUEST_THREADS)
                     {
+                        currentLaunchedThreads++;
                         currentActiveThreads++;
                         Task t = null;
                         t = new Task(() =>
@@ -375,7 +384,6 @@ namespace Email_Web_Extractor
                                     }
                                     else break;
                                 }
-                                //Print("---- " + currOffset);
                                 GetEmailsByRequest(googleRequest, currOffset);
                             }
                             currentActiveThreads--;
@@ -461,6 +469,11 @@ namespace Email_Web_Extractor
         /// <param name="filePath">Путь к файлу</param>
         private void WriteAllRequestResultsToTempFile(string filePath)
         {
+            if (siteRecordsList.Count == 0)
+            {
+                return;
+            }
+
             if (appendToTempFileCheckBox.Checked)
             {
                 if (File.Exists(filePath))
@@ -472,7 +485,7 @@ namespace Email_Web_Extractor
                         {
                             for (int y = 0; y < siteRecordsList[i].Length; y++)
                             {
-                                string record = siteRecordsList[i][y].Site;
+                                string record = (siteRecordsList[i][y].Site).Replace("\n" , "");
                                 if (fileContent.Contains(record) == false)
                                 {
                                     streamWriter.WriteLine(record);
@@ -485,11 +498,13 @@ namespace Email_Web_Extractor
                 else
                 {
                     StringBuilder sb = new StringBuilder();
+                    string temp = "";
                     for (int i = 0; i < siteRecordsList.Count; i++)
                     {
                         for (int y = 0; y < siteRecordsList[i].Length; y++)
                         {
-                            sb.Append(siteRecordsList[i][y].Site);
+                            temp = (siteRecordsList[i][y].Site).Replace("\n", "");
+                            sb.Append(temp + "\n");
                         }
                     }
                     File.WriteAllText(filePath, sb.ToString());
@@ -498,11 +513,13 @@ namespace Email_Web_Extractor
             else
             {
                 StringBuilder sb = new StringBuilder();
+                string temp = "";
                 for (int i = 0; i < siteRecordsList.Count; i++)
                 {
                     for (int y = 0; y < siteRecordsList[i].Length; y++)
                     {
-                        sb.Append(siteRecordsList[i][y]);
+                        temp = (siteRecordsList[i][y].Site).Replace("\n", "");
+                        sb.Append(temp + "\n");
                     }
                 }
                 File.WriteAllText(filePath, sb.ToString());
@@ -672,7 +689,7 @@ namespace Email_Web_Extractor
 
         private void coresCountComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            currentAvalableThrads = coresCountComboBox.SelectedIndex + 1;
+            currentAvalableThreads = coresCountComboBox.SelectedIndex + 1;
             //Print(currentAvalableThrads);
         }
         private void pagesCountComboBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -711,7 +728,104 @@ namespace Email_Web_Extractor
         }
         private void findEmailsButton_Click(object sender, EventArgs e)
         {
+            string[] pagesToSearchArr = null;
+            if (pagesNamesTextBox.Text != "")
+            {
+                try
+                {
+                    pagesToSearchArr = (pagesNamesTextBox.Text).Split(' ');
+                    //Print(pagesToSearchArr.Length);
+                }
+                catch (Exception ex)
+                {
+                    pagesNamesTextBox.Text = "";
+                    PrintStatusBar("Страницы поиска заданы некорректно!", yellowColor);
+                    throw ex;
+                    return;
+                }
+            }
 
+            // Создание списка страниц
+            string tempFileContent;
+            string[] sitesArr;
+            if (File.Exists(fullTempFilePath) == false)
+            {
+                PrintStatusBar("Временный файл со списком сайтов не существует!", redColor);
+                return;
+            }
+            try
+            {
+                tempFileContent = File.ReadAllText(fullTempFilePath);
+                sitesArr = tempFileContent.Split('\n');
+
+                if (sitesArr == null)
+                {
+                    PrintStatusBar("Временный файл не содержит web-адресов!", yellowColor);
+                    return;
+                }
+                if (sitesArr.Length <= 1)
+                {
+                    PrintStatusBar("Временный файл не содержит web-адресов!", yellowColor);
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                PrintStatusBar("Не удалось открыть временный файл!", redColor);
+                throw ex;
+                return;
+            }
+
+            int pagesToSearchSize = 1;
+            if (pagesToSearchArr != null)
+            {
+                pagesToSearchSize = pagesToSearchArr.Length;
+            }
+            string[] allPagesToCheck = new string[sitesArr.Length * pagesToSearchSize];
+            int index = 0;
+
+            for (int i = 0; i < sitesArr.Length; i++)
+            {
+                //Print(sitesArr[i]);
+                if (pagesToSearchArr != null)
+                {
+                    for (int y = 0; y < pagesToSearchArr.Length; y++)
+                    {
+                        string site = sitesArr[i];
+                        allPagesToCheck[index] = WebUtility.UrlEncode(site + "/" + pagesToSearchArr[y]);
+                        index++;
+                    }
+                }
+                else
+                {
+                    allPagesToCheck[index] = WebUtility.UrlEncode(sitesArr[i]);
+                    index++;
+                }
+            }
+
+            Print("Всего сайтов: " + sitesArr.Length + "; Страни на каждый сайт: " + pagesToSearchArr.Length + 
+                "; Всего страниц для проверки: " + allPagesToCheck.Length);
+            //if (pagesToSearchArr != null)
+            //{
+            //    if (pagesToSearchArr.Length > 0)
+            //    {
+            //
+            //        EmailSearchEndedEvent?.Invoke(this, null);
+            //    }
+            //    else
+            //    {
+            //
+            //    }
+            //}
+
+        }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+            if (isAPIHandlerInit == false)
+            {
+                PrintStatusBar("Файл с API ключами не содержит ни одного ключа или отсутствует!", redColor);
+            }
         }
 
 
@@ -747,19 +861,28 @@ namespace Email_Web_Extractor
         private void OnGoogleSearchStarted(object sender, EventArgs e)
         {
             CanDoGoogleRequest = false;
-
-            // Отключить кнопку поиска имейлов
-            findEmailsButton.Enabled = false;
-            findEmailsButton.ForeColor = disabledTextColor;
-            findEmailsButton.BackColor = disabledBGColor;
+            siteRecordsList.Clear();
 
             this.Invoke((Action)(() =>
             {
+                // Отключить кнопку поиска имейлов
+                findEmailsButton.Enabled = false;
+                findEmailsButton.ForeColor = disabledTextColor;
+                findEmailsButton.BackColor = disabledBGColor;
+
                 appendToTempFileCheckBox.Enabled = false;
                 pagesCountComboBox.Enabled = false;
                 coresCountComboBox.Enabled = false;
                 searchRequestTextBox.Enabled = false;
                 pagesNamesTextBox.Enabled = false;
+
+                deleteWebPagesTempFileButton.Enabled = false;
+                deleteWebPagesTempFileButton.BackColor = disabledBGColor;
+                deleteWebPagesTempFileButton.ForeColor = disabledTextColor;
+
+                openWebPagesTempFileButton.Enabled = false;
+                openWebPagesTempFileButton.BackColor = disabledBGColor;
+                openWebPagesTempFileButton.ForeColor = disabledTextColor;
             }));
 
             googleRequestStopWatch = new Stopwatch();
@@ -771,7 +894,6 @@ namespace Email_Web_Extractor
             currentActiveThreads = 0;
             WriteAllRequestResultsToTempFile(fullTempFilePath);
             googleRequestStopWatch.Stop();
-            UpdateButtons();
 
             this.Invoke((Action)(() =>
             {
@@ -780,7 +902,18 @@ namespace Email_Web_Extractor
                 coresCountComboBox.Enabled = true;
                 searchRequestTextBox.Enabled = true;
                 pagesNamesTextBox.Enabled = true;
+
+                deleteWebPagesTempFileButton.Enabled = true;
+                deleteWebPagesTempFileButton.BackColor = redColor;
+                deleteWebPagesTempFileButton.ForeColor = disabledBGColor;
+
+                openWebPagesTempFileButton.Enabled = true;
+                openWebPagesTempFileButton.BackColor = normalColor;
+                openWebPagesTempFileButton.ForeColor = disabledBGColor;
             }));
+
+            UpdateButtons();
+            
             CanDoGoogleRequest = true;
         }
 
@@ -843,10 +976,9 @@ namespace Email_Web_Extractor
             }
         }
 
+
         public delegate void CanDoGoogleRequestChanged(bool canDoGoogleRequest);
         public delegate void TaskComplited(Task task);
         public delegate void EmailSearch(object sender, EventArgs e);
-
-
     }
 }
