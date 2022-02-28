@@ -36,17 +36,17 @@ namespace Email_Web_Extractor
         //$cx = "a6e5f637bbb80bcab"; // d23c46183e23f890e
         //$key = "AIzaSyAS3xsRNoyZDVmZB-rCGMC6_HxeY4MMnKI";
         //$cx = "d23c46183e23f890e";
-        private static string[] APIkeys = new string[]
-        {
-            "AIzaSyBAizc5lFHVGWsIF7hWeIRqlUQ1vVAO1WM",
-            "AIzaSyAS3xsRNoyZDVmZB-rCGMC6_HxeY4MMnKI"
-        };
-
-        private static string[] CXkeys = new string[]
-        {
-            "d23c46183e23f890e",
-            "a6e5f637bbb80bcab"
-        };
+        //private static string[] APIkeys = new string[]
+        //{
+        //    "AIzaSyBAizc5lFHVGWsIF7hWeIRqlUQ1vVAO1WM",
+        //    "AIzaSyAS3xsRNoyZDVmZB-rCGMC6_HxeY4MMnKI"
+        //};
+        //
+        //private static string[] CXkeys = new string[]
+        //{
+        //    "d23c46183e23f890e",
+        //    "a6e5f637bbb80bcab"
+        //};
 
         // $request = "https://www.googleapis.com/customsearch/v1?key=$key&start=$offset&cx=$cx&q=$url";
 
@@ -70,8 +70,11 @@ namespace Email_Web_Extractor
         //int currentSearchThreads = 0;
 
         int currentAvalableThreads = 1;
-        int currentActiveThreads = 0;
+        List<Task> activeThreads = new List<Task>();
+        //int currentActiveThreads = 0;
         bool canDoGoogleRequest = true;
+
+        string additionalMessage = "";
 
         public event CanDoGoogleRequestChanged CanDoGoogleRequestChangedEvent;
         public event TaskComplited GoogleRequestTaskComplitedEvent;
@@ -140,7 +143,7 @@ namespace Email_Web_Extractor
             findWebSitesButton.ForeColor = disabledTextColor;
 
 
-            this.isAPIHandlerInit = ApiKeysHandler.Init(rootDirectory);
+            this.isAPIHandlerInit = ApiKeysHandler.Init(rootDirectory, this);
 
             // Обновить состояние кнопок открытия и удаления временного файла
             if (File.Exists(fullTempFilePath) && this.isAPIHandlerInit)
@@ -173,9 +176,9 @@ namespace Email_Web_Extractor
                 findEmailsButton.ForeColor = disabledTextColor;
                 findEmailsButton.BackColor = disabledBGColor;
             }
-            
 
-            
+
+
             //ToggleFindWebSitesButton(false);
             //try
             //{
@@ -287,12 +290,15 @@ namespace Email_Web_Extractor
         /// <returns></returns>
         private string RequestGoogleAPI(string searchRequest, int offset)
         {
-            string currentAPIKey = APIkeys[0];
-            string currentCXKey = CXkeys[0];
+            ApiKeyPair keyPair = ApiKeysHandler.GetNextApiKey();
+            string currentAPIKey = keyPair.key;
+            string currentCXKey = keyPair.cx;
 
             string fullRequest = "https://www.googleapis.com/customsearch/v1?key=" + currentAPIKey + "&" +
                 "start=" + offset + "&cx=" + currentCXKey + "&q=" + WebUtility.UrlEncode(searchRequest);
             //Print("---" + fullRequest);
+            //return "";
+
 
             StringBuilder sb = new StringBuilder();
             WebClient myClient = new WebClient();
@@ -317,8 +323,13 @@ namespace Email_Web_Extractor
                 if (e.Message.Contains("(429) Too Many Requests"))
                 {
                     Print("Слишком много запросов! Нужно сменить API Key!");
+                    additionalMessage = e.Message;
                 }
-                else Print("Ошибка при выполнении HTTP запроса Google: " + e.Message);
+                else
+                {
+                    additionalMessage = e.Message;
+                    Print("Ошибка при выполнении HTTP запроса Google: " + e.Message);
+                }
                 return "";
             }
         }
@@ -355,21 +366,23 @@ namespace Email_Web_Extractor
                 if (canDoGoogleRequest)
                 {
                     Print("Начался запрос в Google...");
+                    additionalMessage = "";
                     GoogleSearchStartedEvent?.Invoke(this, null);
-                    
+
                     for (int i = 0; i < currentAvalableThreads; i++)
                     {
                         if (i >= MAX_GOOGLE_REQUEST_PAGES_COUNT || i >= currentSearchPages)
                             break;
                         searchOffsetsQueue.Enqueue(i * MAX_GOOGLE_REQUEST_PAGES_COUNT);
                     }
-                    int threadsToLaunchCount = currentAvalableThreads;
-                    int currentLaunchedThreads = 0;
+                    //int threadsToLaunchCount = currentAvalableThreads;
+                    //int currentLaunchedThreads = 0;
 
-                    while (currentLaunchedThreads < threadsToLaunchCount && currentLaunchedThreads < MAX_GOOGLE_REQUEST_THREADS)
+                    //currentActiveThreads = threadsToLaunchCount - 1;
+
+                    //int launchedThreads = 0;
+                    for (int i = 0; i < currentAvalableThreads - 1; i++)
                     {
-                        currentLaunchedThreads++;
-                        currentActiveThreads++;
                         Task t = null;
                         t = new Task(() =>
                         {
@@ -386,11 +399,47 @@ namespace Email_Web_Extractor
                                 }
                                 GetEmailsByRequest(googleRequest, currOffset);
                             }
-                            currentActiveThreads--;
+                            lock (activeThreads)
+                            {
+                                activeThreads.Remove(t);
+                            }
+                            //currentActiveThreads--;
                             GoogleRequestTaskComplitedEvent.Invoke(t);
                         });
+                        activeThreads.Add(t);
+
+                        //launchedThreads++;
                         t.Start();
+
+                        if (i >= MAX_GOOGLE_REQUEST_THREADS)
+                            break;
                     }
+                    //currentActiveThreads = launchedThreads;
+
+                    //while (currentLaunchedThreads < threadsToLaunchCount && currentLaunchedThreads < MAX_GOOGLE_REQUEST_THREADS)
+                    //{
+                    //    currentLaunchedThreads++;
+                    //    Task t = null;
+                    //    t = new Task(() =>
+                    //    {
+                    //        while (searchOffsetsQueue.Count > 0)
+                    //        {
+                    //            int currOffset = 0;
+                    //            lock (searchOffsetsQueue)
+                    //            {
+                    //                if (searchOffsetsQueue.Count > 0)
+                    //                {
+                    //                    currOffset = searchOffsetsQueue.Dequeue();
+                    //                }
+                    //                else break;
+                    //            }
+                    //            GetEmailsByRequest(googleRequest, currOffset);
+                    //        }
+                    //        currentActiveThreads--;
+                    //        GoogleRequestTaskComplitedEvent.Invoke(t);
+                    //    });
+                    //    t.Start();
+                    //}
                 }
                 else
                 {
@@ -458,7 +507,7 @@ namespace Email_Web_Extractor
             catch (Exception s)
             {
                 //PrintStatusBar("Ошибка при выполнении Google запроса: " + s.Message, redColor);
-                Print("Ошибка при выполнении Google запроса: " + s.Message);
+                PrintStatusBar("Ошибка Google запроса: " + s.Message);
                 GoogleSearchEndedEvent?.Invoke(this, null);
             }
         }
@@ -485,12 +534,12 @@ namespace Email_Web_Extractor
                         {
                             for (int y = 0; y < siteRecordsList[i].Length; y++)
                             {
-                                string record = (siteRecordsList[i][y].Site).Replace("\n" , "");
+                                string record = (siteRecordsList[i][y].Site).Replace("\n", "");
                                 if (fileContent.Contains(record) == false)
                                 {
                                     streamWriter.WriteLine(record);
                                 }
-                                else Print("--skipped double...");
+                                //else Print("--skipped double...");
                             }
                         }
                     }
@@ -698,13 +747,13 @@ namespace Email_Web_Extractor
         }
         private void searchRequestTextBox_TextChanged(object sender, EventArgs e)
         {
-            if (searchRequestTextBox.Text == "")
+            if (searchRequestTextBox.Text != "" && isAPIHandlerInit)
             {
-                ToggleFindWebSitesButton(false);
+                ToggleFindWebSitesButton(true);
             }
             else
             {
-                ToggleFindWebSitesButton(true);
+                ToggleFindWebSitesButton(false);
             }
         }
         private void sitesPathFileLabel_Click(object sender, EventArgs e)
@@ -740,7 +789,7 @@ namespace Email_Web_Extractor
                 {
                     pagesNamesTextBox.Text = "";
                     PrintStatusBar("Страницы поиска заданы некорректно!", yellowColor);
-                    throw ex;
+                    //throw ex;
                     return;
                 }
             }
@@ -772,7 +821,7 @@ namespace Email_Web_Extractor
             catch (Exception ex)
             {
                 PrintStatusBar("Не удалось открыть временный файл!", redColor);
-                throw ex;
+                //throw ex;
                 return;
             }
 
@@ -803,8 +852,8 @@ namespace Email_Web_Extractor
                 }
             }
 
-            Print("Всего сайтов: " + sitesArr.Length + "; Страни на каждый сайт: " + pagesToSearchArr.Length + 
-                "; Всего страниц для проверки: " + allPagesToCheck.Length);
+            //Print("Всего сайтов: " + sitesArr.Length + "; Страни на каждый сайт: " + pagesToSearchArr.Length + 
+            //    "; Всего страниц для проверки: " + allPagesToCheck.Length);
             //if (pagesToSearchArr != null)
             //{
             //    if (pagesToSearchArr.Length > 0)
@@ -841,7 +890,6 @@ namespace Email_Web_Extractor
 
 
 
-
         private void OnCanDoGoogleRequestChanged(bool canDoGoogleRequest)
         {
             ToggleFindWebSitesButton(canDoGoogleRequest);
@@ -850,10 +898,22 @@ namespace Email_Web_Extractor
         }
         private void OnGoogleRequestTaskComplited(Task task)
         {
-            if (currentActiveThreads <= 0)
+            //Print("\\\\Threads: " + currentActiveThreads);
+            lock (activeThreads)
             {
-                GoogleSearchEndedEvent?.Invoke(this, null);
-                PrintStatusBar("Запрос выполнен! " + ((float)(googleRequestStopWatch.ElapsedMilliseconds) * 0.001f) + "с", greenColor);
+                if (activeThreads.Count <= 0)
+                {
+                    GoogleSearchEndedEvent?.Invoke(this, null);
+                    if (additionalMessage == "")
+                    {
+                        PrintStatusBar("Запрос выполнен! " + ((float)(googleRequestStopWatch.ElapsedMilliseconds) * 0.001f) + "с", greenColor);
+                    }
+                    else
+                    {
+                        PrintStatusBar("При выполнении запроса возникли проблемы: " + additionalMessage + ". " + ((float)(googleRequestStopWatch.ElapsedMilliseconds) * 0.001f) + "с", yellowColor);
+                    }
+                }
+                else Print("--Поток завершился; " + activeThreads.Count);
             }
         }
 
@@ -891,7 +951,7 @@ namespace Email_Web_Extractor
         // Запрос завершился
         private void OnGoogleSearchEnded(object sender, EventArgs e)
         {
-            currentActiveThreads = 0;
+            //currentActiveThreads = 0;
             WriteAllRequestResultsToTempFile(fullTempFilePath);
             googleRequestStopWatch.Stop();
 
@@ -913,7 +973,7 @@ namespace Email_Web_Extractor
             }));
 
             UpdateButtons();
-            
+
             CanDoGoogleRequest = true;
         }
 
