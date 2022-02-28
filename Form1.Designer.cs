@@ -53,7 +53,6 @@
             this.label6 = new System.Windows.Forms.Label();
             this.statusBar = new System.Windows.Forms.StatusStrip();
             this.statusBarText = new System.Windows.Forms.ToolStripStatusLabel();
-            this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.statusBar.SuspendLayout();
@@ -352,8 +351,7 @@
             this.statusBar.AutoSize = false;
             this.statusBar.BackColor = System.Drawing.SystemColors.Highlight;
             this.statusBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.statusBarText,
-            this.toolStripProgressBar1});
+            this.statusBarText});
             this.statusBar.Location = new System.Drawing.Point(0, 424);
             this.statusBar.Name = "statusBar";
             this.statusBar.RightToLeft = System.Windows.Forms.RightToLeft.No;
@@ -368,15 +366,9 @@
             this.statusBarText.ForeColor = System.Drawing.SystemColors.Control;
             this.statusBarText.Margin = new System.Windows.Forms.Padding(8, 3, 0, 2);
             this.statusBarText.Name = "statusBarText";
-            this.statusBarText.Size = new System.Drawing.Size(430, 18);
+            this.statusBarText.Size = new System.Drawing.Size(736, 18);
             this.statusBarText.Text = "TEXT";
             this.statusBarText.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // toolStripProgressBar1
-            // 
-            this.toolStripProgressBar1.Name = "toolStripProgressBar1";
-            this.toolStripProgressBar1.Size = new System.Drawing.Size(310, 17);
-            this.toolStripProgressBar1.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             // 
             // MainForm
             // 
@@ -423,8 +415,6 @@
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.StatusStrip statusBar;
-        private System.Windows.Forms.ToolStripProgressBar toolStripProgressBar1;
-        private System.Windows.Forms.ToolStripStatusLabel statusBarText;
         private System.Windows.Forms.Button findEmailsButton;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.ComboBox coresCountComboBox;
@@ -435,6 +425,7 @@
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.Label sitesPathFileLabel;
         private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.ToolStripStatusLabel statusBarText;
     }
 }
 
