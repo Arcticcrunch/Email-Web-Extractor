@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.findWebSitesButton = new System.Windows.Forms.Button();
             this.appendToTempFileCheckBox = new System.Windows.Forms.CheckBox();
             this.label1 = new System.Windows.Forms.Label();
@@ -367,7 +368,7 @@
             this.statusBarText.Margin = new System.Windows.Forms.Padding(8, 3, 0, 2);
             this.statusBarText.Name = "statusBarText";
             this.statusBarText.Size = new System.Drawing.Size(736, 18);
-            this.statusBarText.Text = "TEXT";
+            this.statusBarText.Text = "Ожидание...";
             this.statusBarText.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // MainForm
@@ -382,9 +383,9 @@
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "MainForm";
-            this.ShowIcon = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Email Web Extractor";
             this.Load += new System.EventHandler(this.MainForm_Load);

@@ -130,9 +130,9 @@ namespace Email_Web_Extractor
 
             Directory.CreateDirectory(emailsDirectory);
 
-            webAddresesListFilePath = emailsDirectory + "/" + webAddresesListFileName;
-            pagesListFilePath = emailsDirectory + "/" + pagesListFileName;
-            emailListFilePath = emailsDirectory + "/" + emailListFileName;
+            webAddresesListFilePath = emailsDirectory + "\\" + webAddresesListFileName;
+            pagesListFilePath = emailsDirectory + "\\" + pagesListFileName;
+            emailListFilePath = emailsDirectory + "\\" + emailListFileName;
 
             webPagesTempFilePathTextBox.Text = fullTempFilePath;
             sitesPathFileLabel.Text = webAddresesListFilePath;
@@ -608,6 +608,33 @@ namespace Email_Web_Extractor
             }
         }
 
+        private static bool ContainsFewDotsInRow(string text)
+        {
+            if (text == null)
+                return false;
+            bool isDot = false;
+            for (int i = 0; i < text.Length; i++)
+            {
+                char ch = text[i];
+                if (ch == '.')
+                {
+                    if (isDot)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        isDot = true;
+                    }
+                }
+                else
+                {
+                    isDot = false;
+                }
+            }
+            return false;
+        }
+
         /// <summary>
         /// Запросить страницу результатов Google запроса. (макс 10 результатов)
         /// </summary>
@@ -841,7 +868,7 @@ namespace Email_Web_Extractor
         {
             Process.Start(new ProcessStartInfo()
             {
-                FileName = rootDirectory,
+                FileName = emailsDirectory,
                 UseShellExecute = true,
                 Verb = "open"
             });
@@ -851,7 +878,7 @@ namespace Email_Web_Extractor
         {
             Process.Start(new ProcessStartInfo()
             {
-                FileName = rootDirectory,
+                FileName = emailsDirectory,
                 UseShellExecute = true,
                 Verb = "open"
             });
@@ -1065,7 +1092,7 @@ namespace Email_Web_Extractor
                             {
                                 string currentEmail = record.Emails[d];
                                 if (currentEmail.EndsWith(".png") == false && currentEmail.EndsWith(".webp") == false
-                                    && currentEmail.EndsWith(".jpg") == false)
+                                    && currentEmail.EndsWith(".jpg") == false && ContainsFewDotsInRow(currentEmail) == false)
                                 {
                                     currentEmail = currentEmail.TrimEnd('.');
                                     if (currentEmail != "")
