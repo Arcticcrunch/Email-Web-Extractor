@@ -24,12 +24,18 @@ namespace Email_Web_Extractor
     {
         public const int MAX_GOOGLE_REQUEST_THREADS = 10;
         public const int MAX_GOOGLE_REQUEST_PAGES_COUNT = 10;
+        public const int THREADS_MULTIPLICATION_RATIO = 3;
 
         private static string rootDirectory = "";
         private static string tempFileName = "Web pages list temp.txt";
         private static string fullTempFilePath;
+
+        private static string emailsFolderName = "Emails";
+        private static string emailsDirectory;
         private static string webAddresesListFileName = "Web-addreses list.txt";
         private static string webAddresesListFilePath;
+        private static string pagesListFileName = "Pages list.txt";
+        private static string pagesListFilePath;
         private static string emailListFileName = "Emails list temp.txt";
         private static string emailListFilePath;
         //$key = "AIzaSyBAizc5lFHVGWsIF7hWeIRqlUQ1vVAO1WM"; // AIzaSyAS3xsRNoyZDVmZB-rCGMC6_HxeY4MMnKI
@@ -65,7 +71,8 @@ namespace Email_Web_Extractor
         Stopwatch emailsSearchStopWatch;
 
         List<SiteEmailRecord[]> siteRecordsList = new List<SiteEmailRecord[]>();
-        List<SiteEmailRecord[]> foundEmailsList = new List<SiteEmailRecord[]>();
+        List<SiteEmailRecord> foundEmailsList = new List<SiteEmailRecord>();
+        //int foundRelativeEmailsCount = 0;
 
         int currentSearchPages = 10;
         //int currentSearchThreads = 0;
@@ -79,6 +86,8 @@ namespace Email_Web_Extractor
         //int currentActiveThreads = 0;
         bool canDoGoogleRequest = true;
         bool candDoEmailsSearch = true;
+
+        bool isSavingEmails = false;
 
         string additionalMessage = "";
 
@@ -117,8 +126,13 @@ namespace Email_Web_Extractor
             InitializeComponent();
             rootDirectory = AppDomain.CurrentDomain.BaseDirectory;
             fullTempFilePath = rootDirectory + tempFileName;
-            webAddresesListFilePath = rootDirectory + webAddresesListFileName;
-            emailListFilePath = rootDirectory + emailListFileName;
+            emailsDirectory = rootDirectory + emailsFolderName;
+
+            Directory.CreateDirectory(emailsDirectory);
+
+            webAddresesListFilePath = emailsDirectory + "/" + webAddresesListFileName;
+            pagesListFilePath = emailsDirectory + "/" + pagesListFileName;
+            emailListFilePath = emailsDirectory + "/" + emailListFileName;
 
             webPagesTempFilePathTextBox.Text = fullTempFilePath;
             sitesPathFileLabel.Text = webAddresesListFilePath;
@@ -126,11 +140,12 @@ namespace Email_Web_Extractor
 
             // Получение кол-ва макс потоков
             int cpuCores = GetCPUThreadsCount();
-            for (int i = 0; i < cpuCores; i++)
+            int totalThreads = cpuCores * THREADS_MULTIPLICATION_RATIO;
+            for (int i = 0; i < totalThreads; i++)
             {
                 coresCountComboBox.Items.Add(i + 1);
             }
-            coresCountComboBox.SelectedIndex = Clamp(0, cpuCores - 1, cpuCores - 1);
+            coresCountComboBox.SelectedIndex = Clamp(0, totalThreads - 1, totalThreads - 1);
 
             // Кол-во запрашиваемых страниц Google
             for (int i = 1; i <= MAX_GOOGLE_REQUEST_PAGES_COUNT; i++)
@@ -244,22 +259,22 @@ namespace Email_Web_Extractor
         /// </summary>
         /// <param name="page">URL-адрес страницы</param>
         /// <returns></returns>
-        private string GetWebPageContent(string page)
-        {
-            StringBuilder sb = new StringBuilder();
-            WebClient webClient = new WebClient();
-            using (Stream response = webClient.OpenRead(page))
-            {
-                using (StreamReader sr = new StreamReader(response))
-                {
-                    while (sr.EndOfStream == false)
-                    {
-                        sb.Append(sr.ReadLine());
-                    }
-                }
-            }
-            return sb.ToString();
-        }
+        //private string GetWebPageContent(string page)
+        //{
+        //    StringBuilder sb = new StringBuilder();
+        //    WebClient webClient = new WebClient();
+        //    using (Stream response = webClient.OpenRead(page))
+        //    {
+        //        using (StreamReader sr = new StreamReader(response))
+        //        {
+        //            while (sr.EndOfStream == false)
+        //            {
+        //                sb.Append(sr.ReadLine());
+        //            }
+        //        }
+        //    }
+        //    return sb.ToString();
+        //}
 
         /// <summary>
         /// Получить массив имейлов (string) из строки
@@ -533,25 +548,43 @@ namespace Email_Web_Extractor
                 return;
             }
 
-            if (appendToTempFileCheckBox.Checked)
+            try
             {
-                if (File.Exists(filePath))
+                if (appendToTempFileCheckBox.Checked)
                 {
-                    string fileContent = File.ReadAllText(filePath);
-                    using (StreamWriter streamWriter = File.AppendText(filePath))
+                    if (File.Exists(filePath))
                     {
+                        string fileContent = File.ReadAllText(filePath);
+                        using (StreamWriter streamWriter = File.AppendText(filePath))
+                        {
+                            for (int i = 0; i < siteRecordsList.Count; i++)
+                            {
+                                for (int y = 0; y < siteRecordsList[i].Length; y++)
+                                {
+                                    string record = (siteRecordsList[i][y].Site).Replace("\n", "");
+                                    if (fileContent.Contains(record) == false)
+                                    {
+                                        streamWriter.WriteLine(record);
+                                    }
+                                    //else Print("--skipped double...");
+                                }
+                            }
+                        }
+
+                    }
+                    else
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        string temp = "";
                         for (int i = 0; i < siteRecordsList.Count; i++)
                         {
                             for (int y = 0; y < siteRecordsList[i].Length; y++)
                             {
-                                string record = (siteRecordsList[i][y].Site).Replace("\n", "");
-                                if (fileContent.Contains(record) == false)
-                                {
-                                    streamWriter.WriteLine(record);
-                                }
-                                //else Print("--skipped double...");
+                                temp = (siteRecordsList[i][y].Site).Replace("\n", "");
+                                sb.Append(temp + "\n");
                             }
                         }
+                        File.WriteAllText(filePath, sb.ToString());
                     }
                 }
                 else
@@ -569,19 +602,9 @@ namespace Email_Web_Extractor
                     File.WriteAllText(filePath, sb.ToString());
                 }
             }
-            else
+            catch (Exception e)
             {
-                StringBuilder sb = new StringBuilder();
-                string temp = "";
-                for (int i = 0; i < siteRecordsList.Count; i++)
-                {
-                    for (int y = 0; y < siteRecordsList[i].Length; y++)
-                    {
-                        temp = (siteRecordsList[i][y].Site).Replace("\n", "");
-                        sb.Append(temp + "\n");
-                    }
-                }
-                File.WriteAllText(filePath, sb.ToString());
+                PrintStatusBar("Ошибка при обработке временного файла: " + e.Message);
             }
         }
 
@@ -650,23 +673,46 @@ namespace Email_Web_Extractor
         /// <param name="site">URL адрес сайта</param>
         private void FindEmailsOnSite(string site)
         {
-            //StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
             //WebClient webClient = new WebClient();
-            //
-            //webClient.Headers.Add();
-            //
-            //using (Stream response = webClient.OpenRead(site))
-            //{
-            //    using (StreamReader sr = new StreamReader(response))
-            //    {
-            //        while (sr.EndOfStream == false)
-            //        {
-            //            sb.Append(sr.ReadLine());
-            //        }
-            //    }
-            //}
 
-            //return sb.ToString();
+            //webClient.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0");
+
+            site = "http://" + site;
+
+            try
+            {
+                //WebRequest request = HttpWebRequest.Create(site);
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(site);
+                request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0";
+                //request.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0");
+                request.Timeout = 2500;
+                using (WebResponse webResponse = request.GetResponse())
+                {
+                    using (Stream response = webResponse.GetResponseStream())
+                    {
+                        using (StreamReader sr = new StreamReader(response))
+                        {
+                            while (sr.EndOfStream == false)
+                            {
+                                sb.Append(sr.ReadLine());
+                            }
+                        }
+                    }
+                }
+
+
+                Uri siteUri = new Uri(site);
+                string siteName = siteUri.Host;
+                string page = site;
+                string[] emails = GetEmailsFromText(sb.ToString());
+                SiteEmailRecord record = new SiteEmailRecord(siteName, page, emails);
+                foundEmailsList.Add(record);
+            }
+            catch (Exception e)
+            {
+                Print("При поиске имейлов возникла ошибка: " + e.Message);
+            }
         }
 
         [Obsolete]
@@ -814,6 +860,7 @@ namespace Email_Web_Extractor
         {
             if (candDoEmailsSearch)
             {
+                PrintStatusBar("Поиск имейлов начался...", normalColor);
                 EmailSearchStartedEvent?.Invoke(this, null);
 
                 string[] pagesToSearchArr = null;
@@ -886,7 +933,8 @@ namespace Email_Web_Extractor
                         sitesCount++;
                         for (int y = 0; y < pagesToSearchArr.Length; y++)
                         {
-                            tempAddreses.Add(WebUtility.UrlEncode(site + "/" + pagesToSearchArr[y]));
+                            //tempAddreses.Add(WebUtility.UrlEncode(site + "/" + pagesToSearchArr[y]));
+                            tempAddreses.Add(site + "/" + pagesToSearchArr[y]);
                         }
                     }
                 }
@@ -906,22 +954,25 @@ namespace Email_Web_Extractor
                 }
 
                 // Запуск асинхронных потоков поиска
-                for (int i = 0; i < currentMaxAvalableThreads - 1; i++)
+                for (int i = 0; i < currentMaxAvalableThreads; i++)
                 {
                     Task t = null;
+                    //int taskIndex = i;
                     t = new Task(() =>
                     {
                         while (sitesToCheckEmailsQueue.Count > 0)
                         {
+                            string currentSite = "";
                             lock (sitesToCheckEmailsQueue)
                             {
                                 if (sitesToCheckEmailsQueue.Count > 0)
                                 {
-                                    string site = sitesToCheckEmailsQueue.Dequeue();
-                                    FindEmailsOnSite(site);
+                                    currentSite = sitesToCheckEmailsQueue.Dequeue();
                                 }
                                 else break;
                             }
+                            Print("Поток " + t.Id + " взял задачу. Осталось: " + sitesToCheckEmailsQueue.Count + ". Всего потоков: " + currentMaxAvalableThreads);
+                            FindEmailsOnSite(currentSite);
                         }
                         lock (activeEmailsSearchThreads)
                         {
@@ -987,10 +1038,79 @@ namespace Email_Web_Extractor
         {
             lock (activeEmailsSearchThreads)
             {
-                if (activeEmailsSearchThreads.Count == 0)
+                if (activeEmailsSearchThreads.Count == 0 && isSavingEmails == false)
                 {
-                    EmailSearchEndedEvent?.Invoke(this, null);
-                    PrintStatusBar("Поиск имейлов завершен. " + ((float)(emailsSearchStopWatch.ElapsedMilliseconds) * 0.001f) + "с", greenColor);
+                    isSavingEmails = true;
+                    //int emailsCount = 0;
+                    //for (int i = 0; i < foundEmailsList.Count; i++)
+                    //{
+                    //    SiteEmailRecord record = foundEmailsList[i];
+                    //    if (record.Emails != null)
+                    //    {
+                    //        emailsCount += record.Emails.Length;
+                    //    }
+                    //}
+
+                    //foundRelativeEmailsCount
+                    // Фильтрация и запись имейлов в соответствующие файлы
+                    List<string> uniqueEmails = new List<string>();
+                    List<string> sites = new List<string>();
+                    List<string> pages = new List<string>();
+                    for (int i = 0; i < foundEmailsList.Count; i++)
+                    {
+                        SiteEmailRecord record = foundEmailsList[i];
+                        if (record.Emails != null)
+                        {
+                            for (int d = 0; d < record.Emails.Length; d++)
+                            {
+                                string currentEmail = record.Emails[d];
+                                if (currentEmail.EndsWith(".png") == false && currentEmail.EndsWith(".webp") == false
+                                    && currentEmail.EndsWith(".jpg") == false)
+                                {
+                                    currentEmail = currentEmail.TrimEnd('.');
+                                    if (currentEmail != "")
+                                    {
+                                        if (uniqueEmails.Contains(currentEmail) == false)
+                                        {
+                                            uniqueEmails.Add(currentEmail);
+                                            sites.Add(record.Site);
+                                            pages.Add(record.Page);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    try
+                    {
+                        File.Delete(webAddresesListFilePath);
+                        File.Delete(pagesListFilePath);
+                        File.Delete(emailListFilePath);
+                        StreamWriter sitesWriter = File.AppendText(webAddresesListFilePath);
+                        StreamWriter pagesWriter = File.AppendText(pagesListFilePath);
+                        StreamWriter emailsWriter = File.AppendText(emailListFilePath);
+                        for (int i = 0; i < uniqueEmails.Count; i++)
+                        {
+                            sitesWriter.WriteLine(sites[i]);
+                            pagesWriter.WriteLine(pages[i]);
+                            emailsWriter.WriteLine(uniqueEmails[i]);
+                        }
+                        sitesWriter.Close();
+                        pagesWriter.Close();
+                        emailsWriter.Close();
+
+                        EmailSearchEndedEvent?.Invoke(this, null);
+                        PrintStatusBar("Поиск имейлов завершен. " + ((float)(emailsSearchStopWatch.ElapsedMilliseconds) * 0.001f) + "с" + " Найдено имейлов: " + uniqueEmails.Count, greenColor);
+                        
+                    }
+                    catch(Exception e)
+                    {
+                        EmailSearchEndedEvent?.Invoke(this, null);
+                        PrintStatusBar("Не удалось записать найденные имейлы в файлы! " + ((float)(emailsSearchStopWatch.ElapsedMilliseconds) * 0.001f) + "с" + " Найдено имейлов: " + uniqueEmails.Count + " Ошибка: " + e.Message, redColor);
+
+                    }
+
                     //if (additionalMessage == "")
                     //{
                     //    PrintStatusBar("Запрос выполнен! " + ((float)(googleRequestStopWatch.ElapsedMilliseconds) * 0.001f) + "с", greenColor);
@@ -1064,7 +1184,9 @@ namespace Email_Web_Extractor
         }
         private void OnEmailSearchStarted(object sender, EventArgs e)
         {
-            candDoEmailsSearch = true;
+            candDoEmailsSearch = false;
+            isSavingEmails = false;
+            //foundRelativeEmailsCount = 0;
             foundEmailsList.Clear();
 
             emailsSearchStopWatch = new Stopwatch();
