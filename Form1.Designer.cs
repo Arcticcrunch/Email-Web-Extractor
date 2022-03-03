@@ -50,13 +50,18 @@
             this.coresCountComboBox = new System.Windows.Forms.ComboBox();
             this.label8 = new System.Windows.Forms.Label();
             this.findEmailsButton = new System.Windows.Forms.Button();
-            this.label5 = new System.Windows.Forms.Label();
-            this.label6 = new System.Windows.Forms.Label();
             this.statusBar = new System.Windows.Forms.StatusStrip();
             this.statusBarText = new System.Windows.Forms.ToolStripStatusLabel();
+            this.mainMenuStrip = new System.Windows.Forms.MenuStrip();
+            this.программаToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.выходToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.инфоToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.иструкцияToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.оПрограммеToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.statusBar.SuspendLayout();
+            this.mainMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // findWebSitesButton
@@ -110,7 +115,7 @@
             this.groupBox1.Controls.Add(this.findWebSitesButton);
             this.groupBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.groupBox1.ForeColor = System.Drawing.SystemColors.Control;
-            this.groupBox1.Location = new System.Drawing.Point(12, 136);
+            this.groupBox1.Location = new System.Drawing.Point(12, 38);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(3, 3, 3, 6);
             this.groupBox1.Size = new System.Drawing.Size(362, 276);
@@ -233,7 +238,7 @@
             this.groupBox2.Controls.Add(this.pagesNamesTextBox);
             this.groupBox2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F);
             this.groupBox2.ForeColor = System.Drawing.SystemColors.Control;
-            this.groupBox2.Location = new System.Drawing.Point(380, 136);
+            this.groupBox2.Location = new System.Drawing.Point(380, 38);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(362, 276);
             this.groupBox2.TabIndex = 5;
@@ -323,37 +328,13 @@
             this.findEmailsButton.UseVisualStyleBackColor = false;
             this.findEmailsButton.Click += new System.EventHandler(this.findEmailsButton_Click);
             // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 42F, System.Drawing.FontStyle.Bold);
-            this.label5.ForeColor = System.Drawing.SystemColors.Control;
-            this.label5.Location = new System.Drawing.Point(170, 9);
-            this.label5.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(60, 64);
-            this.label5.TabIndex = 12;
-            this.label5.Text = "1";
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Font = new System.Drawing.Font("Microsoft Sans Serif", 42F, System.Drawing.FontStyle.Bold);
-            this.label6.ForeColor = System.Drawing.SystemColors.Control;
-            this.label6.Location = new System.Drawing.Point(528, 9);
-            this.label6.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(60, 64);
-            this.label6.TabIndex = 13;
-            this.label6.Text = "2";
-            // 
             // statusBar
             // 
             this.statusBar.AutoSize = false;
             this.statusBar.BackColor = System.Drawing.SystemColors.Highlight;
             this.statusBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.statusBarText});
-            this.statusBar.Location = new System.Drawing.Point(0, 424);
+            this.statusBar.Location = new System.Drawing.Point(0, 325);
             this.statusBar.Name = "statusBar";
             this.statusBar.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.statusBar.Size = new System.Drawing.Size(755, 23);
@@ -371,19 +352,69 @@
             this.statusBarText.Text = "Ожидание...";
             this.statusBarText.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
+            // mainMenuStrip
+            // 
+            this.mainMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.программаToolStripMenuItem,
+            this.инфоToolStripMenuItem});
+            this.mainMenuStrip.Location = new System.Drawing.Point(0, 0);
+            this.mainMenuStrip.Name = "mainMenuStrip";
+            this.mainMenuStrip.Size = new System.Drawing.Size(755, 24);
+            this.mainMenuStrip.TabIndex = 16;
+            this.mainMenuStrip.Text = "menuStrip1";
+            // 
+            // программаToolStripMenuItem
+            // 
+            this.программаToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.выходToolStripMenuItem});
+            this.программаToolStripMenuItem.Name = "программаToolStripMenuItem";
+            this.программаToolStripMenuItem.Size = new System.Drawing.Size(84, 20);
+            this.программаToolStripMenuItem.Text = "Программа";
+            // 
+            // выходToolStripMenuItem
+            // 
+            this.выходToolStripMenuItem.Name = "выходToolStripMenuItem";
+            this.выходToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.выходToolStripMenuItem.Text = "Выход";
+            this.выходToolStripMenuItem.Click += new System.EventHandler(this.выходToolStripMenuItem_Click);
+            // 
+            // инфоToolStripMenuItem
+            // 
+            this.инфоToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.иструкцияToolStripMenuItem,
+            this.оПрограммеToolStripMenuItem});
+            this.инфоToolStripMenuItem.Name = "инфоToolStripMenuItem";
+            this.инфоToolStripMenuItem.Size = new System.Drawing.Size(51, 20);
+            this.инфоToolStripMenuItem.Text = "Инфо";
+            // 
+            // иструкцияToolStripMenuItem
+            // 
+            this.иструкцияToolStripMenuItem.Name = "иструкцияToolStripMenuItem";
+            this.иструкцияToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.иструкцияToolStripMenuItem.Text = "Иструкция";
+            this.иструкцияToolStripMenuItem.Click += new System.EventHandler(this.иструкцияToolStripMenuItem_Click);
+            // 
+            // оПрограммеToolStripMenuItem
+            // 
+            this.оПрограммеToolStripMenuItem.Name = "оПрограммеToolStripMenuItem";
+            this.оПрограммеToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.оПрограммеToolStripMenuItem.Text = "О программе";
+            this.оПрограммеToolStripMenuItem.Click += new System.EventHandler(this.оПрограммеToolStripMenuItem_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(4)))), ((int)(((byte)(13)))), ((int)(((byte)(21)))));
-            this.ClientSize = new System.Drawing.Size(755, 447);
+            this.ClientSize = new System.Drawing.Size(755, 348);
             this.Controls.Add(this.statusBar);
-            this.Controls.Add(this.label6);
-            this.Controls.Add(this.label5);
+            this.Controls.Add(this.mainMenuStrip);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
+            this.DoubleBuffered = true;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MainMenuStrip = this.mainMenuStrip;
             this.MaximizeBox = false;
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
@@ -395,6 +426,8 @@
             this.groupBox2.PerformLayout();
             this.statusBar.ResumeLayout(false);
             this.statusBar.PerformLayout();
+            this.mainMenuStrip.ResumeLayout(false);
+            this.mainMenuStrip.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -413,8 +446,6 @@
         private System.Windows.Forms.TextBox pagesNamesTextBox;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.Label label6;
         private System.Windows.Forms.StatusStrip statusBar;
         private System.Windows.Forms.Button findEmailsButton;
         private System.Windows.Forms.Label label8;
@@ -427,6 +458,12 @@
         private System.Windows.Forms.Label sitesPathFileLabel;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.ToolStripStatusLabel statusBarText;
+        private System.Windows.Forms.MenuStrip mainMenuStrip;
+        private System.Windows.Forms.ToolStripMenuItem программаToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem выходToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem инфоToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem иструкцияToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem оПрограммеToolStripMenuItem;
     }
 }
 

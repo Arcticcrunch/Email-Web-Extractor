@@ -117,15 +117,44 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="statusBar.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
-  <metadata name="mainMenuStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>118, 17</value>
-  </metadata>
-  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>61</value>
-  </metadata>
+  <data name="label2.Text" xml:space="preserve">
+    <value>1) В строку "Поисковой запрос" ввести интересующий запрос в Google
+2) Нажать на кнопку "Начать поиск" и дождаться завершения. 
+      Это запишет список найденных сайтов во временный файл. 
+      Его можно открыть/удалить соответствующими кнопками
+3) Нажать на кнопку "Найти имейлы" для поиска имейлов на сайтах сохранённых 
+      во временном файле и дождаться завершения выполнения. 
+      Это может занять несколько МИНУТ если временный файл содержит много сайтов
+4) Результаты сохраняются в 3 файла 
+      (для удобства экспорта в Excell или Google Spreadsheets)
+      - Файл "Сайты" будет содержать по одному сайту на строку.
+      - Файл "Имейлы" будет содержать по одному имейлу на 
+            строку соответствующую сайту в файле "Сайты".
+      - Файл "Страницы" будет содержать по одному адресу Web-страницы на которой
+            найден имейл (Нажмите на "Путь к..." что бы открыть папку с файлами).
+Настройки:
+      - Параметр "Количество Google страниц" указывает сколько страниц запросов 
+            Google будет просмотрено (макс 10 страниц) и до 10 результатов 
+            на каждой странице. Этот параметр можно оставить без изменений.
+      - Параметр "Кол-во потоков" указывает сколько одновременных запросов
+             будет обрабатываться. . Этот параметр можно оставить без изменений.
+      - Галочка "Добавлять результаты в существующий файл" указывает,
+             будут ли аккумулироваться результаты запросов во временный файл.
+             Если снята - каждый запрос будет перезаписывать файл.
+      - Поле "Вложенные доп страницы" указывает 
+             на каких страницах сайта нужно искать имейлы
+             (помимо главной страницы). Указывать через пробел. Например,
+             если полученый из Google запроса сайт имеет адрес 
+             "https://cool-site.com/", а в поле указаны слова "about" и "contacts"
+             поиск имейлов будет производиться на следующих страницах:
+             - "https://cool-site.com/",
+             - "https://cool-site.com/about", 
+             - "https://cool-site.com/contacts"
+- Для работы программы необходим файл "API keys.txt" в корневой 
+      директории программы. Данный файл содержит API ключи Google
+      необходимы для доступа к поисковой системе.
+</value>
+  </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
