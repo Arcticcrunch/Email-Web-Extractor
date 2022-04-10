@@ -41,21 +41,6 @@ namespace Email_Web_Extractor
 
         private InfoForm infoForm;
         private InstructionForm instructionForm;
-        //$key = "AIzaSyBAizc5lFHVGWsIF7hWeIRqlUQ1vVAO1WM"; // AIzaSyAS3xsRNoyZDVmZB-rCGMC6_HxeY4MMnKI
-        //$cx = "a6e5f637bbb80bcab"; // d23c46183e23f890e
-        //$key = "AIzaSyAS3xsRNoyZDVmZB-rCGMC6_HxeY4MMnKI";
-        //$cx = "d23c46183e23f890e";
-        //private static string[] APIkeys = new string[]
-        //{
-        //    "AIzaSyBAizc5lFHVGWsIF7hWeIRqlUQ1vVAO1WM",
-        //    "AIzaSyAS3xsRNoyZDVmZB-rCGMC6_HxeY4MMnKI"
-        //};
-        //
-        //private static string[] CXkeys = new string[]
-        //{
-        //    "d23c46183e23f890e",
-        //    "a6e5f637bbb80bcab"
-        //};
 
         // $request = "https://www.googleapis.com/customsearch/v1?key=$key&start=$offset&cx=$cx&q=$url";
 
@@ -68,17 +53,14 @@ namespace Email_Web_Extractor
         Color disabledBGColor = Color.FromKnownColor(KnownColor.Control);
 
         bool isAPIHandlerInit = false;
-        //List<Thread> threadsPool = new List<Thread>();
-        //int maxThreds = 1;
+
         Stopwatch googleRequestStopWatch;
         Stopwatch emailsSearchStopWatch;
 
         List<SiteEmailRecord[]> siteRecordsList = new List<SiteEmailRecord[]>();
         List<SiteEmailRecord> foundEmailsList = new List<SiteEmailRecord>();
-        //int foundRelativeEmailsCount = 0;
 
         int currentSearchPages = 10;
-        //int currentSearchThreads = 0;
 
         int currentMaxAvalableThreads = 1;
         Queue<int> googleSearchOffsetsQueue = new Queue<int>();
@@ -86,7 +68,7 @@ namespace Email_Web_Extractor
 
         Queue<string> sitesToCheckEmailsQueue = new Queue<string>();
         List<Task> activeEmailsSearchThreads = new List<Task>();
-        //int currentActiveThreads = 0;
+
         bool canDoGoogleRequest = true;
         bool candDoEmailsSearch = true;
 
@@ -97,31 +79,17 @@ namespace Email_Web_Extractor
 
         bool isSavingEmails = false;
 
+        int totalPagesToSearchEmailsCount = 0;
+        int currentPagesToSearchEmailsCount = 0;
 
         string additionalMessage = "";
 
-        //public event CanDoGoogleRequestChanged CanDoGoogleRequestChangedEvent;
         public event TaskComplited GoogleRequestTaskComplitedEvent;
         public event EmailSearch GoogleSearchStartedEvent;
         public event EmailSearch GoogleSearchEndedEvent;
         public event TaskComplited EmasilSearchTaskComplitedEvent;
         public event EmailSearch EmailSearchStartedEvent;
         public event EmailSearch EmailSearchEndedEvent;
-
-
-        //public bool CanDoGoogleRequest
-        //{
-        //    get
-        //    {
-        //        return canDoGoogleRequest;
-        //    }
-        //
-        //    set
-        //    {
-        //        canDoGoogleRequest = value;
-        //        CanDoGoogleRequestChangedEvent?.Invoke(value);
-        //    }
-        //}
 
 
 
@@ -163,7 +131,6 @@ namespace Email_Web_Extractor
             }
             pagesCountComboBox.SelectedIndex = MAX_GOOGLE_REQUEST_PAGES_COUNT - 1;
 
-            //CanDoGoogleRequestChangedEvent += OnCanDoGoogleRequestChanged;
             GoogleRequestTaskComplitedEvent += OnGoogleRequestTaskComplited;
             GoogleSearchStartedEvent += OnGoogleSearchStarted;
             GoogleSearchEndedEvent += OnGoogleSearchEnded;
@@ -179,41 +146,6 @@ namespace Email_Web_Extractor
 
             this.isAPIHandlerInit = ApiKeysHandler.Init(rootDirectory, this);
 
-            //if (isAPIHandlerInit == false)
-            //    canDoGoogleRequest = false;
-
-            // Обновить состояние кнопок открытия и удаления временного файла
-            //if (File.Exists(fullTempFilePath) && this.isAPIHandlerInit)
-            //{
-            //    deleteWebPagesTempFileButton.Enabled = true;
-            //    deleteWebPagesTempFileButton.BackColor = redColor;
-            //    deleteWebPagesTempFileButton.ForeColor = disabledBGColor;
-            //
-            //    openWebPagesTempFileButton.Enabled = true;
-            //    openWebPagesTempFileButton.BackColor = normalColor;
-            //    openWebPagesTempFileButton.ForeColor = disabledBGColor;
-            //
-            //    // Включить кнопку поиска имейлов
-            //    findEmailsButton.Enabled = true;
-            //    findEmailsButton.ForeColor = disabledBGColor;
-            //    findEmailsButton.BackColor = normalColor;
-            //}
-            //else
-            //{
-            //    deleteWebPagesTempFileButton.Enabled = false;
-            //    deleteWebPagesTempFileButton.BackColor = disabledBGColor;
-            //    deleteWebPagesTempFileButton.ForeColor = disabledTextColor;
-            //
-            //    openWebPagesTempFileButton.Enabled = false;
-            //    openWebPagesTempFileButton.BackColor = disabledBGColor;
-            //    openWebPagesTempFileButton.ForeColor = disabledTextColor;
-            //
-            //    // Отключить кнопку поиска имейлов
-            //    findEmailsButton.Enabled = false;
-            //    findEmailsButton.ForeColor = disabledTextColor;
-            //    findEmailsButton.BackColor = disabledBGColor;
-            //}
-
             if (File.Exists(fullTempFilePath))
             {
                 candDoEmailsSearch = true;
@@ -222,44 +154,6 @@ namespace Email_Web_Extractor
             this.infoForm = new InfoForm();
             this.instructionForm = new InstructionForm();
 
-            //ToggleFindWebSitesButton(false);
-            //try
-            //{
-            //    string address = "https://cryptocasinos.com/about-us/asdf";
-            //    string page = GetWebPageContent(address);
-            //    string[] emailsArr = GetEmailsFromText(page);
-            //    Console.WriteLine("Найдено имейлов на странице '" + address + "': " + emailsArr.Length);
-            //    for (int i = 0; i < emailsArr.Length; i++)
-            //    {
-            //        Console.WriteLine("-- " + emailsArr[i]);
-            //    }
-            //}
-            //catch (WebException e)
-            //{
-            //    Console.WriteLine("Ошибка HTTP: " + e.Message);
-            //}
-            //catch (Exception e)
-            //{
-            //    Console.WriteLine("Ошибка: " + e.Message);
-            //}
-
-            //string filePath = rootDirectory + "/" + tempFileName;
-            //File.WriteAllText(filePath, page);
-            //
-            //
-            //string regexString = @"[\._a-zA-Z0-9-]+@[\._a-zA-Z0-9-]+\.[\._a-zA-Z0-9-]+";
-            //string[] matches = GetRegexFromString(regexString, "CryptoCasinos is an online casino guide that provides all information related to crypto-gambling. 
-            // The site was created by a team of crypto enthusiasts with a love for online casinos.
-            //Our goal is to provide unbiased reviews and top lists so that players can make an educated choice when it comes to choosing which site to play at.
-            // This page aims to help answer questions about who owns the site and how we operate. If you have any questions, feel free to reach out at info@cryptocasinos.com.");
-
-            //Console.WriteLine("TEST REGEX: " + matches.Length);
-            //for (int i = 0; i < matches.Length; i++)
-            //{
-            //    Console.WriteLine("-- " + matches[i]);
-            //}
-
-            //this.statusBarText.Text = GetCPUCoresCount().ToString();
         }
 
 
@@ -272,27 +166,7 @@ namespace Email_Web_Extractor
             return Environment.ProcessorCount;
         }
 
-        /// <summary>
-        /// Получить содержимое Web страницы
-        /// </summary>
-        /// <param name="page">URL-адрес страницы</param>
-        /// <returns></returns>
-        //private string GetWebPageContent(string page)
-        //{
-        //    StringBuilder sb = new StringBuilder();
-        //    WebClient webClient = new WebClient();
-        //    using (Stream response = webClient.OpenRead(page))
-        //    {
-        //        using (StreamReader sr = new StreamReader(response))
-        //        {
-        //            while (sr.EndOfStream == false)
-        //            {
-        //                sb.Append(sr.ReadLine());
-        //            }
-        //        }
-        //    }
-        //    return sb.ToString();
-        //}
+
 
         /// <summary>
         /// Получить массив имейлов (string) из строки
@@ -339,8 +213,6 @@ namespace Email_Web_Extractor
 
             string fullRequest = "https://www.googleapis.com/customsearch/v1?key=" + currentAPIKey + "&" +
                 "start=" + offset + "&cx=" + currentCXKey + "&q=" + WebUtility.UrlEncode(searchRequest);
-            //Print("---" + fullRequest);
-            //return "";
 
 
             StringBuilder sb = new StringBuilder();
@@ -362,7 +234,6 @@ namespace Email_Web_Extractor
             }
             catch (WebException e)
             {
-                //throw e;
                 if (e.Message.Contains("(429) Too Many Requests"))
                 {
                     Print("Слишком много запросов! Нужно заменить API Key!");
@@ -408,7 +279,7 @@ namespace Email_Web_Extractor
             {
                 if (canDoGoogleRequest)
                 {
-                    Print("Начался запрос в Google...");
+                    PrintStatusBar("Начался запрос в Google...");
                     additionalMessage = "";
                     GoogleSearchStartedEvent?.Invoke(this, null);
 
@@ -418,13 +289,8 @@ namespace Email_Web_Extractor
                             break;
                         googleSearchOffsetsQueue.Enqueue(i * MAX_GOOGLE_REQUEST_PAGES_COUNT);
                     }
-                    //int threadsToLaunchCount = currentAvalableThreads;
-                    //int currentLaunchedThreads = 0;
 
-                    //currentActiveThreads = threadsToLaunchCount - 1;
-
-                    //int launchedThreads = 0;
-                    for (int i = 0; i < currentMaxAvalableThreads - 1; i++)
+                    for (int i = 0; i < currentMaxAvalableThreads; i++)
                     {
                         Task t = null;
                         t = new Task(() =>
@@ -446,110 +312,24 @@ namespace Email_Web_Extractor
                             {
                                 activeGoogleSearchThreads.Remove(t);
                             }
-                            //currentActiveThreads--;
                             GoogleRequestTaskComplitedEvent.Invoke(t);
                         });
                         activeGoogleSearchThreads.Add(t);
 
-                        //launchedThreads++;
                         t.Start();
 
                         if (i >= MAX_GOOGLE_REQUEST_THREADS)
                             break;
                     }
-                    //currentActiveThreads = launchedThreads;
-
-                    //while (currentLaunchedThreads < threadsToLaunchCount && currentLaunchedThreads < MAX_GOOGLE_REQUEST_THREADS)
-                    //{
-                    //    currentLaunchedThreads++;
-                    //    Task t = null;
-                    //    t = new Task(() =>
-                    //    {
-                    //        while (searchOffsetsQueue.Count > 0)
-                    //        {
-                    //            int currOffset = 0;
-                    //            lock (searchOffsetsQueue)
-                    //            {
-                    //                if (searchOffsetsQueue.Count > 0)
-                    //                {
-                    //                    currOffset = searchOffsetsQueue.Dequeue();
-                    //                }
-                    //                else break;
-                    //            }
-                    //            GetEmailsByRequest(googleRequest, currOffset);
-                    //        }
-                    //        currentActiveThreads--;
-                    //        GoogleRequestTaskComplitedEvent.Invoke(t);
-                    //    });
-                    //    t.Start();
-                    //}
                 }
                 else
                 {
                     PrintStatusBar("Запрос в Google уже выполняется...", yellowColor);
                 }
 
-                //string strTest = jo["items"].Count().ToString();
-                //Console.WriteLine("strTest: " + strTest);
-                // DVD read/writer
-
-                //IList<string> allDrives = o["Drives"].Select(t => (string)t).ToList();
-                // DVD read/writer
-                // 500 gigabyte hard drive
-
-
-
-                //JObject items = JObject.Parse((string)reader.Value);
-
-                //string prop = (string)jo["prop"];
-                //JEnumerable<JToken> childrens = jo.Children();
-                //JToken token = ((JArray)jo)["items"];//jo.GetValue("items");
-                //string value = jo["items"];//GetTokenKeys(token);
-
-                //"link": "https://acronyms.thefreedictionary.com/GHFG",
-                //"displayLink":
-
-                //for (int i = 0; i < childrens.Count(); i++)
-                //{
-                //    //JTokenReader reader = new JTokenReader(childrens.ElementAt(i));
-                //    string values = GetTokenKeys(childrens.ElementAt(i));
-                //    
-                //    //childrens[values];
-                //    Console.WriteLine(values);
-                //    //for (int y = 0; y < values.Length; y++)
-                //    //{
-                //    //    Console.WriteLine(values[y]);
-                //    //}
-                //    //GetTokenKeys((JObject)jo["items"]);
-                //
-                //}
-                //foreach (JToken s in childrens)
-                //{
-                //    JTokenReader reader = new JTokenReader(s);
-                //    reader.Read();
-                //    Console.WriteLine("JToken: " + reader.Value);
-                //}
-                //for (int i = 0; i < childrens.Count(); i++)
-                //{
-                //    Console.WriteLine("JObject: " + (string)jo[childrens[i]]);
-                //}
-                //Console.WriteLine("JObject: " + (string)jo[);
-
-                //var ja = (JArray)JsonConvert.DeserializeObject(json);
-                //var jo = (JObject)ja[0];
-                //Console.WriteLine(jo["a"]);
-                //Console.jo(jo["a"]);
-                //PrintStatusBar("Поиск начался...", normalColor);
-                //}
-                //catch (WebException s)
-                //{
-                //    PrintStatusBar("Ошибка HTTP при загрузке:" + s.Message, redColor);
-                //}
-
             }
             catch (Exception s)
             {
-                //PrintStatusBar("Ошибка при выполнении Google запроса: " + s.Message, redColor);
                 PrintStatusBar("Ошибка Google запроса: " + s.Message);
                 GoogleSearchEndedEvent?.Invoke(this, null);
             }
@@ -719,15 +499,11 @@ namespace Email_Web_Extractor
         private void FindEmailsOnSite(string site)
         {
             StringBuilder sb = new StringBuilder();
-            //WebClient webClient = new WebClient();
-
-            //webClient.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0");
 
             site = "http://" + site;
 
             try
             {
-                //WebRequest request = HttpWebRequest.Create(site);
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(site);
                 request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0";
                 //request.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0");
@@ -876,12 +652,10 @@ namespace Email_Web_Extractor
             if (searchRequestTextBox.Text != "")
             {
                 isAnyTextEnteredInRequest = true;
-                //ToggleFindWebSitesButton(true);
             }
             else
             {
                 isAnyTextEnteredInRequest = false;
-                //ToggleFindWebSitesButton(false);
             }
             UpdateButtons();
         }
@@ -909,6 +683,8 @@ namespace Email_Web_Extractor
             if (candDoEmailsSearch)
             {
                 PrintStatusBar("Поиск имейлов начался...", normalColor);
+                this.currentPagesToSearchEmailsCount = 0;
+
                 EmailSearchStartedEvent?.Invoke(this, null);
 
                 string[] pagesToSearchArr = null;
@@ -934,7 +710,6 @@ namespace Email_Web_Extractor
                     {
                         pagesNamesTextBox.Text = "";
                         PrintStatusBar("Страницы поиска заданы некорректно!", yellowColor);
-                        //throw ex;
                         return;
                     }
                 }
@@ -967,7 +742,6 @@ namespace Email_Web_Extractor
                 {
                     PrintStatusBar("Не удалось открыть временный файл!", redColor);
 
-                    //throw ex;
                     return;
                 }
 
@@ -982,17 +756,13 @@ namespace Email_Web_Extractor
                         sitesCount++;
                         for (int y = 0; y < pagesToSearchArr.Length; y++)
                         {
-                            //tempAddreses.Add(WebUtility.UrlEncode(site + "/" + pagesToSearchArr[y]));
                             tempAddreses.Add(site + "/" + pagesToSearchArr[y]);
                         }
                     }
                 }
 
-                //allPagesToCheck = tempAddreses.ToArray();
-                //foreach (var item in allPagesToCheck)
-                //{
-                //    Print("Page: " + item);
-                //}
+                this.totalPagesToSearchEmailsCount = tempAddreses.Count;
+                //int currentPagesToSearchEmailsCount = 0;
 
                 Print("\nВсего сайтов: " + sitesCount + "; Страниц на каждый сайт: " + pagesToSearchArr.Length +
                     "; Всего страниц для проверки: " + tempAddreses.Count);
@@ -1006,7 +776,6 @@ namespace Email_Web_Extractor
                 for (int i = 0; i < currentMaxAvalableThreads; i++)
                 {
                     Task t = null;
-                    //int taskIndex = i;
                     t = new Task(() =>
                     {
                         while (sitesToCheckEmailsQueue.Count > 0)
@@ -1022,10 +791,19 @@ namespace Email_Web_Extractor
                             }
                             Print("Поток " + t.Id + " взял задачу. Осталось: " + sitesToCheckEmailsQueue.Count + ". Всего потоков: " + currentMaxAvalableThreads);
                             FindEmailsOnSite(currentSite);
+                            currentPagesToSearchEmailsCount++;
+
+                            // Вывод в статус бар оповещения о кол-ве имейлов
+                            this.Invoke((Action)(() =>
+                            {
+                                PrintStatusBar("Надено имейлов: " + foundEmailsList.Count + " Обработано сайтов: " + currentPagesToSearchEmailsCount + "/" + totalPagesToSearchEmailsCount);
+                            }
+                            ));
                         }
                         lock (activeEmailsSearchThreads)
                         {
                             activeEmailsSearchThreads.Remove(t);
+                            Print("Потол " + t.Id + " завершился! Осталось потоков: " + activeEmailsSearchThreads.Count);
                         }
                         EmasilSearchTaskComplitedEvent?.Invoke(t);
                     });
@@ -1073,12 +851,6 @@ namespace Email_Web_Extractor
 
 
 
-        //private void OnCanDoGoogleRequestChanged(bool canDoGoogleRequest)
-        //{
-        //    ToggleFindWebSitesButton(canDoGoogleRequest);
-        //
-        //    //Print("Можно ли выполнить запрос в Google: " + canDoGoogleRequest);
-        //}
 
         private void OnGoogleRequestTaskComplited(Task task)
         {
@@ -1167,7 +939,7 @@ namespace Email_Web_Extractor
                         emailsWriter.Close();
 
                         EmailSearchEndedEvent?.Invoke(this, null);
-                        PrintStatusBar("Поиск имейлов завершен. " + ((float)(emailsSearchStopWatch.ElapsedMilliseconds) * 0.001f) + "с" + " Найдено имейлов: " + uniqueEmails.Count, greenColor);
+                        PrintStatusBar("Поиск имейлов завершен. " + ((float)(emailsSearchStopWatch.ElapsedMilliseconds) * 0.001f) + "с" + " Найдено уникальных имейлов: " + uniqueEmails.Count + " Обработанно страниц: " + currentPagesToSearchEmailsCount + "/" + totalPagesToSearchEmailsCount, greenColor);
 
                     }
                     catch (Exception e)
@@ -1186,7 +958,6 @@ namespace Email_Web_Extractor
                     //    PrintStatusBar("При выполнении запроса возникли проблемы: " + additionalMessage + ". " + ((float)(googleRequestStopWatch.ElapsedMilliseconds) * 0.001f) + "с", yellowColor);
                     //}
                 }
-                //else Print("--Поток завершился; " + activeThreads.Count);
             }
         }
 
@@ -1200,28 +971,6 @@ namespace Email_Web_Extractor
 
             siteRecordsList.Clear();
 
-            //this.Invoke((Action)(() =>
-            //{
-            //    // Отключить кнопку поиска имейлов
-            //    findEmailsButton.Enabled = false;
-            //    findEmailsButton.ForeColor = disabledTextColor;
-            //    findEmailsButton.BackColor = disabledBGColor;
-            //
-            //    appendToTempFileCheckBox.Enabled = false;
-            //    pagesCountComboBox.Enabled = false;
-            //    coresCountComboBox.Enabled = false;
-            //    searchRequestTextBox.Enabled = false;
-            //    pagesNamesTextBox.Enabled = false;
-            //
-            //    deleteWebPagesTempFileButton.Enabled = false;
-            //    deleteWebPagesTempFileButton.BackColor = disabledBGColor;
-            //    deleteWebPagesTempFileButton.ForeColor = disabledTextColor;
-            //
-            //    openWebPagesTempFileButton.Enabled = false;
-            //    openWebPagesTempFileButton.BackColor = disabledBGColor;
-            //    openWebPagesTempFileButton.ForeColor = disabledTextColor;
-            //}));
-
             googleRequestStopWatch = new Stopwatch();
             googleRequestStopWatch.Start();
         }
@@ -1230,23 +979,6 @@ namespace Email_Web_Extractor
         {
             WriteAllRequestResultsToTempFile(fullTempFilePath);
             googleRequestStopWatch.Stop();
-
-            //this.Invoke((Action)(() =>
-            //{
-            //    appendToTempFileCheckBox.Enabled = true;
-            //    pagesCountComboBox.Enabled = true;
-            //    coresCountComboBox.Enabled = true;
-            //    searchRequestTextBox.Enabled = true;
-            //    pagesNamesTextBox.Enabled = true;
-            //
-            //    deleteWebPagesTempFileButton.Enabled = true;
-            //    deleteWebPagesTempFileButton.BackColor = redColor;
-            //    deleteWebPagesTempFileButton.ForeColor = disabledBGColor;
-            //
-            //    openWebPagesTempFileButton.Enabled = true;
-            //    openWebPagesTempFileButton.BackColor = normalColor;
-            //    openWebPagesTempFileButton.ForeColor = disabledBGColor;
-            //}));
 
             isGoogleSearching = false;
             canDoGoogleRequest = true;
@@ -1273,6 +1005,7 @@ namespace Email_Web_Extractor
         {
             emailsSearchStopWatch.Stop();
 
+
             candDoEmailsSearch = true;
             isEmailsSearching = false;
 
@@ -1283,29 +1016,9 @@ namespace Email_Web_Extractor
 
 
 
-        //private void ToggleFindWebSitesButton(bool state)
-        //{
-        //    this.Invoke((Action)(() =>
-        //    {
-        //        findWebSitesButton.Enabled = state;
-        //        if (state)
-        //        {
-        //            findWebSitesButton.BackColor = normalColor;
-        //            findWebSitesButton.ForeColor = disabledBGColor;
-        //        }
-        //        else
-        //        {
-        //            findWebSitesButton.BackColor = disabledBGColor;
-        //            findWebSitesButton.ForeColor = disabledTextColor;
-        //        }
-        //    }));
-        //}
 
         private void UpdateButtons()
         {
-            //bool disableEveryControll = false;
-            //if (canDoGoogleRequest == false && candDoEmailsSearch == false)
-            //    disableEveryControll = true;
             bool isAnySearchInProgress = false;
             if (isGoogleSearching || isEmailsSearching)
                 isAnySearchInProgress = true;
@@ -1379,7 +1092,7 @@ namespace Email_Web_Extractor
                         findWebSitesButton.BackColor = disabledBGColor;
                         findWebSitesButton.ForeColor = disabledTextColor;
                     }
-                    
+
                     // Включить поле ввода страниц
                     pagesNamesTextBox.Enabled = true;
 
@@ -1398,8 +1111,8 @@ namespace Email_Web_Extractor
                         // Включить кнопку удаления временного файла
                         deleteWebPagesTempFileButton.Enabled = true;
                         deleteWebPagesTempFileButton.BackColor = redColor;
-                        deleteWebPagesTempFileButton.ForeColor = disabledBGColor; 
-                        
+                        deleteWebPagesTempFileButton.ForeColor = disabledBGColor;
+
                         // Включить кнопку поиска имейлов
                         findEmailsButton.Enabled = true;
                         findEmailsButton.BackColor = normalColor;
@@ -1431,7 +1144,6 @@ namespace Email_Web_Extractor
 
 
 
-        //public delegate void CanDoGoogleRequestChanged(bool canDoGoogleRequest);
         public delegate void TaskComplited(Task task);
         public delegate void EmailSearch(object sender, EventArgs e);
     }
